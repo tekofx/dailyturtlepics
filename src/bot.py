@@ -4,11 +4,20 @@ import asyncio
 import os
 import tweepy as tw
 import requests
+from datetime import datetime, time, timedelta
+
 class Bot:
     def __init__(self) -> None:
         self.unsplash = Unsplash()
         self.mastodon=Mastodon(access_token=os.getenv("MASTODON_TOKEN"),api_base_url=os.getenv("MASTODON_APP_INSTANCE"))
         
+        print(os.path)
+        
+        if not os.path.isfile("data/history.txt"):
+            print("Creating history file")
+            os.mkdir("data")
+            with open("data/history.txt","w") as file:
+                file.write("")
         """ oauth = tw.OAuthHandler(os.getenv("TWITTER_CONSUMER_KEY"), os.getenv("TWITTER_CONSUMER_SECRET"))
         oauth.set_access_token(os.getenv("TWITTER_ACCESS_TOKEN"), os.getenv("TWITTER_ACCESS_TOKEN_SECRET"))
         self.twitter = tw.API(oauth, wait_on_rate_limit=True) """
@@ -16,17 +25,43 @@ class Bot:
         
     def run(self):
         asyncio.run(self.post())
+        
+    async def wait_until_4pm(self):
+        now = datetime.now()
+        target_time = time(hour=16)
+        target_datetime = datetime.combine(now.date(), target_time)
+
+        if now.time() > target_time:
+            target_datetime += timedelta(days=1)
+
+        seconds_left = int((target_datetime - now).total_seconds())
+        await asyncio.sleep(seconds_left)
+
+
             
     async def post(self):
         while True:
-        
-            pic=self.unsplash.search_keyword("turtle")[0]
+            # Get seconds remaingin until 4pm
+            await self.wait_until_4pm()
             
-            # Download pic
-            response = requests.get(pic.url, stream=True)
+            pics=self.unsplash.search_keyword("turtle")
+            for x in pics:
+                if x.id not in open("data/history.txt").read().splitlines():
+                    with open("data/history.txt","a") as file:
+                        file.write(x.id)
+                        
+                    print("Posting "+x.id)
+                    # Download pic
+                    response = requests.get(x.url, stream=True)
+                    
+                    media=self.mastodon.media_post(media_file=response.content,mime_type="image/jpeg")
+                    self.mastodon.status_post(status=x.url,media_ids=media)
+                    
+                    #self.twitter.update_status_with_media("Hello World!",pic)
+                    break
+                else:
+                    print("Skipping "+x.id)
+            await asyncio.sleep(86400) # 1 day
             
-            media=self.mastodon.media_post(media_file=response.content,mime_type="image/jpeg")
-            self.mastodon.status_post(status=pic.url,media_ids=media)
             
-            #self.twitter.update_status_with_media("Hello World!",pic)
-            await asyncio.sleep(3600) # 1 hour
+            
