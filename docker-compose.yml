@@ -1,0 +1,7 @@
+version: "3"
+services:
+  dailyturlebot:
+    image: dailyturtlebot
+    container_name: furbot
+    restart: unless-stopped
+    env_file: .env
