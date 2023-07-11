@@ -3,6 +3,7 @@ from mastodon import Mastodon
 import asyncio
 import os
 import tweepy as tw
+import requests
 class Bot:
     def __init__(self) -> None:
         self.unsplash = Unsplash()
@@ -19,8 +20,13 @@ class Bot:
     async def post(self):
         while True:
         
-            pic=self.unsplash.search_keyword("turtle")
+            pic=self.unsplash.search_keyword("turtle")[0]
             
-            self.mastodon.media_post(pic)
+            # Download pic
+            response = requests.get(pic.url, stream=True)
+            
+            media=self.mastodon.media_post(media_file=response.content,mime_type="image/jpeg")
+            self.mastodon.status_post(status=pic.url,media_ids=media)
+            
             #self.twitter.update_status_with_media("Hello World!",pic)
-            await asyncio.wait(3600) # 1 hour
+            await asyncio.sleep(3600) # 1 hour
