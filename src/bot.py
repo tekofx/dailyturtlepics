@@ -11,11 +11,11 @@ class Bot:
         self.unsplash = Unsplash()
         self.mastodon=Mastodon(access_token=os.getenv("MASTODON_TOKEN"),api_base_url=os.getenv("MASTODON_APP_INSTANCE"))
         
-        print(os.path)
         
-        if not os.path.isfile("data/history.txt"):
+        if not os.path.isdir("data"):
             print("Creating history file")
             os.mkdir("data")
+        if not os.path.isfile("data/history.txt"):
             with open("data/history.txt","w") as file:
                 file.write("")
         """ oauth = tw.OAuthHandler(os.getenv("TWITTER_CONSUMER_KEY"), os.getenv("TWITTER_CONSUMER_SECRET"))
@@ -24,6 +24,7 @@ class Bot:
         
         
     def run(self):
+        print("Starting bot")
         asyncio.run(self.post())
         
     async def wait_until_4pm(self):
@@ -42,6 +43,7 @@ class Bot:
     async def post(self):
         while True:
             # Get seconds remaingin until 4pm
+            print("Waiting until 4pm")
             await self.wait_until_4pm()
             
             pics=self.unsplash.search_keyword("turtle")
