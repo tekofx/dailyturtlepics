@@ -1,8 +1,8 @@
 version: "3"
 services:
-  dailyturlebot:
-    image: dailyturtlebot
-    container_name: furbot
+  dailyturtles:
+    image: dailyturtles
+    container_name: dailyturtles
     restart: unless-stopped
     env_file: .env
 
