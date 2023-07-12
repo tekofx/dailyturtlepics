@@ -1,7 +1,7 @@
 version: "3"
 services:
   dailyturtles:
-    image: dailyturtles
+    image: ghcr.io/tekofx/dailyturtles:latest
     container_name: dailyturtles
     restart: unless-stopped
     env_file: .env
